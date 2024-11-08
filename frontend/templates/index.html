@@ -1,17 +1,157 @@
-<!-- frontend/templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voting App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #eef2f3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .container {
+            width: 300px;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            text-align: center;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-a {
+            background-color: #ff6f61; /* Coral */
+        }
+        .btn-b {
+            background-color: #6a5acd; /* Slate Blue */
+        }
+        .progress-bar-container {
+            background-color: #d3d3d3;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+        .progress-bar {
+            height: 20px;
+            text-align: center;
+            color: #fff;
+            font-weight: bold;
+        }
+        .progress-a {
+            background-color: #ff6f61; /* Coral */
+        }
+        .progress-b {
+            background-color: #6a5acd; /* Slate Blue */
+        }
+        .clicked {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .recommendation {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #333;
+        }
+    </style>
 </head>
 <body>
+
     <h1>Vote for Your Favorite Option</h1>
-    <form action="/vote" method="POST">
-        <button type="submit" name="choice" value="Option A">Option A</button>
-        <button type="submit" name="choice" value="Option B">Option B</button>
-    </form>
+    <div class="container">
+        <!-- Botones para votar -->
+        <button id="voteA" onclick="vote('Option A')" class="btn-a">Option A</button>
+        <button id="voteB" onclick="vote('Option B')" class="btn-b">Option B</button>
+
+        <!-- Barra de progreso para visualizar los resultados -->
+        <div class="progress-bar-container">
+            <div id="progress-a" class="progress-bar progress-a" style="width: 50%">50%</div>
+        </div>
+        <div class="progress-bar-container">
+            <div id="progress-b" class="progress-bar progress-b" style="width: 50%">50%</div>
+        </div>
+    </div>
+
+    <!-- Sección para mostrar la recomendación basada en Manhattan -->
+    <div id="recommendation" class="recommendation">
+        <!-- La recomendación aparecerá aquí -->
+    </div>
+
+    <script>
+        // Función para enviar el voto y actualizar los resultados
+        async function vote(option) {
+            // Envía el voto al backend
+            await fetch('http://localhost:5001/vote', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ choice: option }),
+            });
+
+            // Deshabilita los botones para evitar múltiples clics
+            document.getElementById('voteA').classList.add('clicked');
+            document.getElementById('voteB').classList.add('clicked');
+            document.getElementById('voteA').disabled = true;
+            document.getElementById('voteB').disabled = true;
+
+            // Actualiza la barra de progreso y la recomendación
+            updateProgress();
+            updateRecommendation();
+        }
+
+        // Función para obtener y mostrar el porcentaje de votos
+        async function updateProgress() {
+            const response = await fetch('http://localhost:5001/votes');
+            const data = await response.json();
+
+            const totalVotes = data['Option A'] + data['Option B'];
+            const percentageA = ((data['Option A'] / totalVotes) * 100).toFixed(1);
+            const percentageB = ((data['Option B'] / totalVotes) * 100).toFixed(1);
+
+            document.getElementById('progress-a').style.width = percentageA + '%';
+            document.getElementById('progress-a').innerText = percentageA + '%';
+            document.getElementById('progress-b').style.width = percentageB + '%';
+            document.getElementById('progress-b').innerText = percentageB + '%';
+        }
+
+        // Función para obtener y mostrar la recomendación basada en Manhattan
+        async function updateRecommendation() {
+            const response = await fetch('http://localhost:5001/recommend?user=TargetUser'); // Cambia "TargetUser" al usuario deseado
+            const data = await response.json();
+
+            if (data.neighbor) {
+                document.getElementById('recommendation').innerText = 
+                    `Recomendación basada en Manhattan: ${data.neighbor}`;
+            } else {
+                document.getElementById('recommendation').innerText = 
+                    'No se pudo obtener la recomendación.';
+            }
+        }
+
+        // Llama a updateProgress cada 5 segundos para actualizar los resultados en tiempo real
+        setInterval(updateProgress, 5000);
+        // Llama a updateProgress y updateRecommendation al cargar la página
+        updateProgress();
+        updateRecommendation();
+    </script>
+
 </body>
 </html>
-

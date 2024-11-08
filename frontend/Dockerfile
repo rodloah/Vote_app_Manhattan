@@ -3,10 +3,9 @@ FROM python:3.9
 
 WORKDIR /app
 
-# Instala Flask y Requests
+RUN python -m pip install --upgrade pip
 RUN pip install flask requests
 
 COPY . /app
 
 CMD ["python", "app.py"]
-
