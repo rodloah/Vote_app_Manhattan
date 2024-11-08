@@ -1,0 +1,17 @@
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "5000:5000"
+    depends_on:
+      - backend
+    dns:
+      - 8.8.8.8  # DNS de Google como alternativa
+
+  backend:
+    build: ./backend
+    ports:
+      - "5001:5001"
+    dns:
+      - 8.8.8.8  # DNS de Google como alternativa
+
